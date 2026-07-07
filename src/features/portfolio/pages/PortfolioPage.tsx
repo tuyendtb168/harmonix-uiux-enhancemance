@@ -2,17 +2,32 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
   BarChart2, ArrowUpRight, ArrowDownRight, TrendingUp,
-  Plus, Wallet, Layers, Zap, Star, Bell, Gift, ArrowRight,
+  Plus, Wallet, Layers, Zap, Star, Bell, Gift, ArrowRight, Info,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { PieChart, Pie, Cell } from 'recharts'
-import { Button, ErrorState } from '@/shared/ui'
+import { Button, ErrorState, Tooltip, TooltipProvider } from '@/shared/ui'
 import { PortfolioChart } from '../components/PortfolioChart'
 import { DepositModal } from '@/features/vault/components/DepositModal'
 import { WithdrawModal } from '@/features/vault/components/WithdrawModal'
 import { usePortfolio } from '../hooks/usePortfolio'
 import { cn } from '@/shared/lib/utils'
 import type { PortfolioPosition } from '../components/PositionCard'
+
+const YIELD_EARNED_DISCLAIMER =
+  'Yield Earned chỉ được tính toán chính xác khi bạn nắm giữ token trực tiếp trong ví cá nhân. Các hoạt động add LP, PT/YT hoặc Lending bên thứ ba sẽ không được phản ánh ở đây.'
+
+function YieldEarnedInfo() {
+  return (
+    <TooltipProvider>
+      <Tooltip content={<p className="text-xs">{YIELD_EARNED_DISCLAIMER}</p>} side="top">
+        <button type="button" className="text-muted-foreground hover:text-foreground transition-colors" aria-label="What is Yield Earned?">
+          <Info className="h-3 w-3" aria-hidden />
+        </button>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 // ─── CommandBar ───────────────────────────────────────────────────────────────
 
@@ -55,15 +70,18 @@ function CommandBar({ totalValueFormatted, netDepositedFormatted, totalEarnedFor
         {/* Right — 4 stats spread evenly */}
         <div className="flex-1 grid grid-cols-2 gap-5 sm:grid-cols-4 sm:pl-6">
 
-          {/* Cost Basis */}
+          {/* Net Deposited */}
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Cost Basis</p>
+            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Net Deposited</p>
             <p className="text-xl font-black text-foreground tabular-nums">{netDepositedFormatted}</p>
           </div>
 
-          {/* Total Earnings (PnL) */}
+          {/* Yield Earned */}
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Unrealized PnL</p>
+            <div className="flex items-center gap-1 mb-1">
+              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Yield Earned</p>
+              <YieldEarnedInfo />
+            </div>
             <div className="flex items-baseline gap-2 flex-wrap">
               <p className="text-xl font-black text-success tabular-nums">{totalEarnedFormatted}</p>
               <span className={cn('flex items-center gap-0.5 text-xs font-semibold', isPnlPositive ? 'text-success' : 'text-destructive')}>
@@ -160,7 +178,7 @@ function EarningsBreakdown() {
   return (
     <div className="rounded-xl border border-border/50 bg-card p-4 flex flex-col gap-3 h-full">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-semibold text-foreground">PnL Breakdown</p>
+        <p className="text-sm font-semibold text-foreground">Yield Earned Breakdown</p>
         <span className="text-xs text-muted-foreground border border-border rounded-md px-2 py-0.5">All time</span>
       </div>
 
@@ -651,15 +669,20 @@ export function PortfolioPage() {
           <table className="w-full" role="table" aria-label="Investment positions">
             <thead>
               <tr className="border-b border-border/50 bg-muted/20">
-                {['Vault', 'Assets', 'Value', 'Unrealized PnL', 'APY', 'Actions'].map((h, i) => (
+                {['Vault', 'Assets', 'Value', 'Yield Earned', 'APY', 'Actions'].map((h, i) => (
                   <th key={h} className={cn(
                     'py-2.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider',
                     i === 0 ? 'pl-5 pr-3 text-left' : i === 5 ? 'pl-3 pr-5 text-right' : 'px-3 text-left',
                     h === 'Value' && 'text-right',
-                    h === 'Unrealized PnL' && 'text-right',
+                    h === 'Yield Earned' && 'text-right',
                     h === 'APY' && 'hidden md:table-cell text-right',
                   )}>
-                    {h}
+                    {h === 'Yield Earned' ? (
+                      <span className="inline-flex items-center gap-1 justify-end w-full">
+                        {h}
+                        <YieldEarnedInfo />
+                      </span>
+                    ) : h}
                   </th>
                 ))}
               </tr>

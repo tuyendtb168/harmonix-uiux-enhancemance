@@ -2,7 +2,7 @@
 
 # Portfolio Page Specification
 
-Version 2.0
+Version 3.0
 
 ---
 
@@ -28,7 +28,7 @@ Understand financial status at a glance.
 
 Monitor active positions.
 
-Track pending withdrawals.
+Track pending withdrawals and claimable rewards.
 
 Access all management actions.
 
@@ -42,159 +42,155 @@ Access all management actions.
 
 # Page Layout
 
+Single-column layout. No sidebar — every section spans the full content width.
+
 ```
 ┌────────────────────────────────────────────────────────┐
 │                    TOP NAVIGATION                       │
 ├────────────────────────────────────────────────────────┤
-│                                                        │
-│  PAGE HEADER                                           │
-│  "Your Portfolio"                                      │
-│                                                        │
+│  PAGE HEADER — "Portfolio"              [Analytics →]  │
 ├────────────────────────────────────────────────────────┤
-│                                                        │
-│  PORTFOLIO SUMMARY (4 key metrics)                     │
-│                                                        │
+│  COMMAND BAR (5 metrics)                                │
+├────────────────────────────────────────────────────────┤
+│  NEXT ACTION BANNER (contextual recommendation)         │
+├────────────────────────────────────────────────────────┤
+│  ATTENTION NOTIFICATIONS                                │
+│  (withdrawal in progress / reward available)            │
+├────────────────────────────────────────────────────────┤
+│  POSITIONS TABLE                                         │
 ├──────────────────────────┬─────────────────────────────┤
-│                          │                             │
-│  PRIMARY (8 cols)        │  SIDEBAR (4 cols)           │
-│                          │                             │
-│  PERFORMANCE CHART       │  QUICK STATS CARD           │
-│                          │                             │
-├──────────────────────────┤  PENDING WITHDRAWALS        │
-│                          │  (if any)                   │
-│  ACTIVE POSITIONS        │                             │
-│                          │  REWARDS SUMMARY            │
-├──────────────────────────┤                             │
-│                          │                             │
-│  RECENT ACTIVITY         │                             │
-│                          │                             │
-├──────────────────────────┴─────────────────────────────┤
-│                   FOOTER                               │
+│  PERFORMANCE CHART (2/3)  │  YIELD EARNED BREAKDOWN     │
+│                            │  (1/3, donut chart)         │
+├────────────────────────────────────────────────────────┤
+│  RECENT ACTIVITY TABLE                                   │
+├────────────────────────────────────────────────────────┤
+│                   FOOTER                                 │
 └────────────────────────────────────────────────────────┘
 ```
 
+Positions is shown before Performance & Allocation — users check "what do I hold" before "how did it trend."
+
 ---
 
-# Section 1: Portfolio Summary
+# Terminology
+
+Per the PnL PRD (Phase 1 / MVP), this page never uses the label **"PnL"** or **"Net PnL"** in user-facing copy.
+
+| Internal concept | Label shown to user |
+|---|---|
+| `totalValue - totalDeposited` | **Yield Earned** |
+| `totalDeposited` (Total Deposit − Total Withdraw) | **Net Deposited** |
+
+**Yield Earned** always ships with an info tooltip `(i)`:
+
+> "Yield Earned chỉ được tính toán chính xác khi bạn nắm giữ token trực tiếp trong ví cá nhân. Các hoạt động add LP, PT/YT hoặc Lending bên thứ ba sẽ không được phản ánh ở đây."
+
+This disclaimer must appear both on the Command Bar metric and the Positions table column header. See `docs/proposed_pnl_prd.md` for the full staged rollout (Phase 2 handles transfer in/out, Phase 3 handles third-party LP/PT/YT positions via DeBank/Zapper).
+
+---
+
+# Section 1: Command Bar
 
 ## Purpose
 
 Give users their financial snapshot within 5 seconds.
 
----
+## Layout
 
-## Metrics (4 stat cards)
+Total Value is visually separated (left, larger type) from the other 4 metrics (right, grid, evenly spaced) by a vertical divider on desktop, a horizontal divider on mobile.
+
+## Metrics (5 total)
 
 | Metric | Description |
 |--------|-------------|
-| Portfolio Value | Total current value of all positions |
-| Total Earnings | Cumulative yield earned |
-| Current APY | Weighted average APY across positions |
-| Pending Withdrawals | Total amount in withdrawal processing |
-
----
+| Total Value | Total current value of all positions. Subtext shows 24h change (`+$142.35 (0.06%) 24h`). |
+| Net Deposited | Total Deposit − Total Withdraw. No trend indicator. |
+| Yield Earned | `Total Value − Net Deposited`. Shows dollar amount + all-time % + "Since first deposit" caption. Info tooltip required (see Terminology). |
+| Portfolio APY | Weighted average APY across positions. |
+| Points | Cumulative points + "+N today" delta. Clicking navigates to `/rewards`. |
 
 ## Design Rules
 
-Portfolio Value is the dominant number — largest font size.
+Total Value is the dominant number — largest font size, leftmost position.
 
-All four metrics visible without scrolling.
+All five metrics visible without scrolling on desktop.
 
-Use count-up animation when values load.
-
-Values update in real time if possible.
+Points metric is a clickable link (`<Link to="/rewards">`), not just decorative text — hover state changes text color to primary.
 
 ---
 
-# Section 2: Performance Chart
+# Section 2: Next Action Banner
 
 ## Purpose
 
-Visualize portfolio growth over time.
+Surface one contextual, high-value recommendation per visit instead of a generic upsell.
+
+## Logic
+
+Priority order, first match wins:
+
+1. **Small portfolio** (`totalValue < $10,000`) → "Boost your yield" — nudge toward the $10k milestone.
+2. **Low allocation, high APY** (a position with `sharePercent < 20%` and `currentApy > 10%`) → "Rebalance opportunity" — suggest adding to that position.
+3. **Default** → "Earn 2× points this week" — nudge toward the highest-APY vault.
+
+## Content
+
+Icon (contextual: Zap / Star), headline, one-line body copy, single CTA button that opens the Deposit modal for the targeted vault.
 
 ---
 
-## Chart Type
+# Section 3: Attention Notifications
 
-Line chart (area fill).
+## Purpose
 
----
+Surface time-sensitive account events without requiring a trip to `/portfolio/analytics` or `/rewards`.
 
-## Time Filters
+## Content
 
-7D / 30D / 90D / All Time
+Two inline banner types, shown when applicable:
 
----
+**Withdrawal in progress**
+- Icon: Bell (primary color)
+- Amount, source vault, estimated completion timestamp
+- CTA: "View details →"
 
-## Data Series
-
-Portfolio Value over time.
-
-Optional overlay: Total Deposited (to show earnings gap).
-
----
+**Reward available to claim**
+- Icon: Gift (success color)
+- Claimable amount description (e.g. "$174.50 USDC in yield bonuses ready")
+- CTA: "Claim now →" → `/rewards?tab=history`
 
 ## Rules
 
-Chart is the main visual anchoring the page.
-
-Lazy loads — does not block summary metrics.
-
-Empty state when user has no history yet.
+Each banner is independent — shown/hidden based on its own condition, not bundled into a single "N items need attention" summary.
 
 ---
 
-# Section 3: Active Positions
+# Section 4: Positions Table
 
 ## Purpose
 
-Show all current investments.
-
----
+Show all current investments with the data needed to decide "add more" or "withdraw."
 
 ## Section Header
 
-"Your Positions"
+`Positions (N)` — count reflects live position count.
 
-Action: None (all positions always visible)
+## Columns (desktop table)
 
----
+| Column | Content |
+|---|---|
+| Vault | Vault icon + name + `% of portfolio` |
+| Assets | Token badges for each underlying deposit token (e.g. `USDC` `haUSDC`) |
+| Value | Current value + `{deposited} in` |
+| Yield Earned | Dollar amount + all-time %. Column header carries the info tooltip. |
+| APY | Current APY, hidden below `md` breakpoint |
+| Actions | Add (icon button), Withdraw, Details |
 
-## Position Card Content
+Points and Risk are **not** shown as table columns — points live in the Command Bar / Rewards page; risk classification was removed from this table.
 
-For each active position:
+## Mobile
 
-Vault Name + logo
-
-Asset type
-
-Your Value (current)
-
-Total Deposited
-
-Earnings (value + %)
-
-Current APY
-
----
-
-## Position Card Actions
-
-Primary: "Withdraw" → opens Withdraw modal
-
-Secondary: "Deposit More" → opens Deposit modal
-
-Tertiary: "View Vault" → navigates to /earn/:vault
-
----
-
-## Position Card States
-
-Active — standard display
-
-Processing — deposit or withdraw in progress (show mini timeline)
-
----
+Positions collapse into stacked cards: header row (icon, name, `% of portfolio`, token badges) + value/yield on the right, a 2-column stat row (APY, Deposited), then action buttons.
 
 ## Empty State
 
@@ -202,182 +198,82 @@ When user has no positions:
 
 "You haven't invested in any vaults yet."
 
-"Explore available vaults to start earning yield."
+"Deposit into a vault to start earning yield and points automatically."
 
-CTA: "Explore Vaults" → /earn
+CTA: "Explore Vaults" → `/earn`
 
 ---
 
-# Section 4: Recent Activity
+# Section 5: Performance & Allocation
 
 ## Purpose
 
-Chronological record of important events.
+Visualize portfolio growth over time and show where earnings come from.
+
+## Layout
+
+Two cards side by side, ratio **2:1** (`lg:flex-[2]` chart, `lg:flex-[1]` breakdown), stacked vertically below the `lg` breakpoint.
+
+A single Show/Hide toggle (`BarChart2` icon + label) controls both cards together. **Default: shown.**
+
+## Left card — Portfolio Performance chart
+
+Area chart, two series: Portfolio Value (filled) and Net Deposited (dashed reference line).
+
+Time filters: `1D / 7D / 30D / 90D / ALL`.
+
+Tooltip shows Portfolio, Net Deposited, and Yield Earned (label, not "PnL") for the hovered point.
+
+Legend below the chart repeats the same three values for the latest data point.
+
+## Right card — Yield Earned Breakdown
+
+Donut chart with per-vault yield breakdown + legend (name, dollar amount, % share).
+
+Header: "Yield Earned Breakdown" with an "All time" badge.
+
+Footer link: "View full analytics →" → `/portfolio/analytics`.
+
+## Rules
+
+Chart lazy-loads — does not block the Command Bar or Positions table from rendering.
 
 ---
+
+# Section 6: Recent Activity
+
+## Purpose
+
+Chronological record of deposit / withdrawal / auto-redeem events.
 
 ## Section Header
 
-"Recent Activity"
+"Recent Activity" — "View all →" links to `/portfolio/analytics`.
 
-Action: "View All" → expands or navigates to full history
+## Format
 
----
+Full table (not a simple description list), columns:
 
-## Activity Item Content
+| Column | Content |
+|---|---|
+| (icon) | Action-type icon in a colored tile: deposit (success, down-arrow-in), withdrawal (destructive, up-arrow-out), auto redeem (primary, trending-up) |
+| Action | `Deposit` / `Withdrawal` / `Auto Redeem` |
+| Vault | Vault name |
+| Amount | Signed number, colored to match action type |
+| Unit | Token badge (reuses the same token badge component as the Positions table) |
+| Timestamp | Absolute datetime (`YYYY-MM-DD HH:mm`) |
 
-Icon (deposit / withdraw / reward)
+## Mobile
 
-Description: "Deposited 5,000 USDC into Delta Neutral USDC"
-
-Timestamp: relative ("2 days ago") or absolute
-
-Status badge
-
----
-
-## Activity Types
-
-Deposited
-
-Withdrawal Requested
-
-Withdrawal Completed
-
-Reward Claimed
-
-Campaign Joined
-
----
+Collapses to a row list: icon + action/vault on the left, amount + unit + timestamp stacked on the right.
 
 ## Display Limit
 
-Show last 5 items by default.
-
-"View All" expands or shows paginated full history.
-
----
+Show last 6 items by default. "View all" navigates to full history.
 
 ## Empty State
 
 "Your activity will appear here after your first deposit."
-
----
-
-# Sidebar: Quick Stats
-
-## Content
-
-Number of Active Positions
-
-Highest APY Position (vault name + APY)
-
-Best Performing Position (vault name + earnings %)
-
----
-
-# Sidebar: Pending Withdrawals
-
-Visible only when pending withdrawals exist.
-
----
-
-## Purpose
-
-Always show users where their money is.
-
-Never let pending funds feel "missing."
-
----
-
-## Content
-
-For each pending withdrawal:
-
-Vault Name
-
-Amount
-
-Current Status (badge)
-
-Timeline mini-component:
-
-● Requested
-│
-● Processing
-│
-○ Transferred
-
-Estimated Completion: "~2 days remaining"
-
----
-
-## Rules
-
-This section is never hidden, even when Portfolio shows other content.
-
-Pending withdrawals are part of the user's total assets.
-
----
-
-## Empty State
-
-When no pending withdrawals: this section is hidden entirely.
-
----
-
-# Sidebar: Rewards Summary
-
-## Content
-
-Total Points (cumulative)
-
-Points from Harmonix + Points from Partners (split display)
-
-CTA: "View Rewards" → /rewards
-
----
-
-## Rules
-
-Compact display — not the full rewards page.
-
-Rewards are secondary to portfolio.
-
----
-
-## Reward Available to Claim Banner
-
-When the user has claimable rewards, a notification banner appears in the portfolio page:
-
-- Icon: Gift (success color)
-- Title: "Reward available to claim"
-- Subtitle: Amount ready (e.g. "$174.50 USDC in yield bonuses ready")
-- CTA: "Claim now →" → `/rewards?tab=history`
-
-"Claim now" navigates to `/rewards?tab=history` to open the History tab directly where claimable items are shown with their Claimable status badges.
-
----
-
-# Allocation Section (Optional)
-
-A donut chart showing capital allocation across vaults.
-
----
-
-## Content
-
-Donut chart with vault breakdown.
-
-Legend showing vault name + % + value.
-
----
-
-## Rules
-
-Only visible when user has 2+ positions.
-
-Hidden for single-position portfolios.
 
 ---
 
@@ -393,11 +289,7 @@ CTA: "Connect Wallet"
 
 # Page State: Connected, No Investments
 
-Show empty states for all sections.
-
-Prominent CTA: "Explore Vaults" → /earn
-
-Portfolio summary shows all zeros.
+Header renders normally; body shows a centered empty state (see Section 4 empty state) with "Explore Vaults" CTA.
 
 ---
 
@@ -409,31 +301,19 @@ Full portfolio view as specified above.
 
 # Loading State
 
-Portfolio summary: skeleton (4 stat placeholders) — loads first.
+Single skeleton covers the whole page in this order: header bar → command bar block → banner strip → two stat blocks → position row placeholders.
 
-Chart: skeleton (large area).
-
-Positions: skeleton (2–3 card placeholders).
-
-Activity: skeleton (5 row placeholders).
-
-Sidebar: skeleton.
-
-Portfolio summary should feel near-instant (priority load).
+Never render `null` for loading — always show skeleton, matching the real layout.
 
 ---
 
 # Real-Time Updates
 
-Portfolio Value updates when:
+Total Value and Yield Earned update when:
 
-New deposit completes.
-
-Withdrawal completes.
-
-Yield accrues (periodic refresh).
-
-Use subtle animation for value changes (count-up).
+- A new deposit completes.
+- A withdrawal completes.
+- Yield accrues (periodic refresh).
 
 ---
 
@@ -447,6 +327,8 @@ User can deposit more or withdraw from any position in 2 clicks.
 
 User never wonders "where is my money."
 
+User understands that Yield Earned has a scope limitation (via tooltip) rather than assuming it's a complete PnL figure.
+
 ---
 
 # Failure States
@@ -458,6 +340,8 @@ User cannot find their pending withdrawal.
 User sees outdated portfolio values.
 
 User cannot take action on a position.
+
+User mistakes "Yield Earned" for a complete PnL number and is surprised by discrepancies from off-platform DeFi activity (mitigated by the disclaimer tooltip — see `docs/proposed_pnl_prd.md`).
 
 ---
 

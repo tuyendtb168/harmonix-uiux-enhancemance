@@ -133,12 +133,12 @@ export function PortfolioChart({ isLoading }: PortfolioChartProps) {
                     </div>
                     <div className="flex items-center gap-2 mb-1">
                       <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'hsl(var(--muted-foreground))' }} />
-                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>Cost Basis</span>
+                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>Net Deposited</span>
                       <span style={{ fontWeight: 600, color: 'hsl(var(--foreground))' }}>${deposited.toLocaleString()}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'hsl(var(--success))' }} />
-                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>PnL</span>
+                      <span style={{ color: 'hsl(var(--muted-foreground))' }}>Yield Earned</span>
                       <span style={{ fontWeight: 600, color: 'hsl(var(--success))' }}>+${gain.toLocaleString()} (+{gainPct}%)</span>
                     </div>
                   </div>
@@ -159,12 +159,12 @@ export function PortfolioChart({ isLoading }: PortfolioChartProps) {
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-muted-foreground inline-block" aria-hidden />
-          <span className="text-muted-foreground">Cost Basis</span>
+          <span className="text-muted-foreground">Net Deposited</span>
           <span className="font-semibold text-foreground">${lastPoint.netDeposited.toLocaleString()}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-success inline-block" aria-hidden />
-          <span className="text-muted-foreground">PnL</span>
+          <span className="text-muted-foreground">Yield Earned</span>
           <span className="font-semibold text-success">+${pnl.toLocaleString()} (+{pnlPct}%)</span>
         </div>
       </div>
