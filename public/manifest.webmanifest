@@ -1,0 +1,17 @@
+{
+  "name": "Harmonix",
+  "short_name": "Harmonix",
+  "description": "Institutional Yield on Hyperliquid",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#6366F1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

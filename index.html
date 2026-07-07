@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary meta -->
+    <title>Harmonix — Institutional Yield on Hyperliquid</title>
+    <meta name="description" content="Deposit once. Earn automatically. Professional vault strategies on Hyperliquid manage your capital — you keep full control." />
+    <meta name="theme-color" content="#6366F1" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Harmonix" />
+    <meta property="og:title" content="Harmonix — Institutional Yield on Hyperliquid" />
+    <meta property="og:description" content="Deposit once. Earn automatically. Professional vault strategies on Hyperliquid manage your capital — you keep full control." />
+    <meta property="og:url" content="https://harmonix.xyz" />
+
+    <!-- Twitter card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Harmonix — Institutional Yield on Hyperliquid" />
+    <meta name="twitter:description" content="Deposit once. Earn automatically. Professional vault strategies on Hyperliquid." />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <!-- Prevent flash of unstyled content for dark mode -->
+    <script>
+      ;(function () {
+        try {
+          var t = localStorage.getItem('harmonix-theme')
+          var isDark = !t || t === 'dark' || (t === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          if (isDark) document.documentElement.classList.add('dark')
+        } catch {}
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/app/main.tsx"></script>
+  </body>
+</html>
